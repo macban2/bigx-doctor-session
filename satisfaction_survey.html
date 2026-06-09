@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>태블로 닥터세션 만족도 조사</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  :root {
+    --green: #00917A; --green-dark: #006658; --green-light: #E6F5F3; --green-mid: #99D5CC;
+    --bg: #F4F6FA; --surface: #FFFFFF; --border: #D0D8E8; --border-light: #E8EEF8;
+    --text-primary: #141414; --text-secondary: #5A5A5A; --text-tertiary: #9A9A9A;
+    --font: 'Pretendard', -apple-system, sans-serif; --radius: 12px; --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text-primary); min-height: 100vh; padding: 2.5rem 1.25rem; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 640px; margin: 0 auto; }
+
+  /* 헤더 */
+  .survey-header { background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem; text-align: center; }
+  .survey-header-icon { font-size: 32px; margin-bottom: 12px; }
+  .survey-header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .survey-header-sub { font-size: 13px; opacity: 0.8; line-height: 1.6; }
+
+  /* 카드 */
+  .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .q-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--green-light); color: var(--green); font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+  .q-text { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 4px; }
+  .q-tag { display: inline-block; font-size: 11px; color: var(--green); background: var(--green-light); padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-top: 4px; margin-bottom: 14px; }
+
+  /* 입력 */
+  input[type="text"], input[type="date"], textarea {
+    font-family: var(--font); font-size: 14px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px; width: 100%;
+    color: var(--text-primary); outline: none; background: var(--surface); transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus { border-color: var(--green); }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+  /* 5점 척도 */
+  .scale-wrap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .scale-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; background: var(--surface); -webkit-tap-highlight-color: transparent; user-select: none; }
+  @media (max-width: 480px) {
+    body { padding: 1.25rem 0.875rem; }
+    .survey-header { padding: 1.5rem 1.25rem; border-radius: 10px; }
+    .survey-header-title { font-size: 17px; }
+    .card { padding: 1.25rem; }
+    .scale-wrap { gap: 6px; }
+    .scale-btn { padding: 10px 4px; }
+    .scale-num { font-size: 16px; }
+    .scale-label { font-size: 9px; }
+    .q-text { font-size: 14px; }
+  }
+  .scale-btn:hover { border-color: var(--green-mid); background: var(--green-light); }
+  .scale-btn.selected { border-color: var(--green); background: var(--green-light); }
+  .scale-btn.selected .scale-num { color: var(--green); font-weight: 800; }
+  .scale-btn.selected .scale-emoji { transform: scale(1.2); }
+  .scale-num { font-size: 18px; font-weight: 600; color: var(--text-secondary); transition: all 0.15s; }
+  .scale-label { font-size: 10px; color: var(--text-tertiary); text-align: center; line-height: 1.3; }
+  .scale-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+  .scale-label-end { font-size: 11px; color: var(--text-tertiary); }
+
+  /* 제출 버튼 */
+  .btn-submit { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--green); color: white; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.15s; }
+  .btn-submit:hover { background: var(--green-dark); }
+
+  /* 완료 화면 */
+  .complete { display: none; text-align: center; padding: 3rem 2rem; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); }
+  .complete-icon { font-size: 48px; margin-bottom: 16px; }
+  .complete-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--green); }
+  .complete-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="survey-header">
+    <div class="survey-header-icon">🩺</div>
+    <div class="survey-header-title">Tableau 닥터세션 만족도 조사</div>
+    <div class="survey-header-sub">세션에 참여해주셔서 감사합니다.<br>소중한 의견을 남겨주시면 더 나은 세션을 만드는 데 큰 도움이 됩니다.</div>
+  </div>
+
+  <div id="surveyForm">
+    <!-- Q1 이름 -->
+    <div class="card">
+      <div class="q-num">1</div>
+      <div class="q-text">이름을 입력해주세요.</div>
+      <div style="height:10px;"></div>
+      <input type="text" id="q1" placeholder="홍길동">
+    </div>
+
+    <!-- Q2 고객사 -->
+    <div class="card">
+      <div class="q-num">2</div>
+      <div class="q-text">세션이 진행된 고객사를 선택해주세요.</div>
+      <div style="height:10px;"></div>
+      <select id="q2" style="font-family:var(--font);font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;width:100%;color:var(--text-primary);outline:none;appearance:none;background:var(--surface) url('data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E') no-repeat right 12px center;" onchange="toggleQ2Custom()">
+        <option value="">선택해주세요</option>
+        <option value="교보생명">교보생명</option>
+        <option value="KB손해보험">KB손해보험</option>
+        <option value="하나은행">하나은행</option>
+        <option value="기타">기타 (직접 입력)</option>
+      </select>
+      <div id="q2CustomWrap" style="display:none;margin-top:8px;">
+        <input type="text" id="q2Custom" placeholder="고객사명을 입력해주세요">
+      </div>
+    </div>
+
+    <!-- Q3 날짜 -->
+    <div class="card">
+      <div class="q-num">3</div>
+      <div class="q-text">세션 참여 날짜를 선택해주세요.</div>
+      <div style="height:10px;"></div>
+      <input type="date" id="q3">
+    </div>
+
+    <!-- Q4 전반적 만족도 -->
+    <div class="card">
+      <div class="q-num">4</div>
+      <div class="q-text">태블로 닥터세션에 전반적으로 만족합니다.</div>
+      <div class="scale-wrap" id="scale4">
+        <div class="scale-btn" onclick="selectScale(4,1)"><div class="scale-num">1</div><div class="scale-label">매우<br>불만족</div></div>
+        <div class="scale-btn" onclick="selectScale(4,2)"><div class="scale-num">2</div><div class="scale-label">불만족</div></div>
+        <div class="scale-btn" onclick="selectScale(4,3)"><div class="scale-num">3</div><div class="scale-label">보통</div></div>
+        <div class="scale-btn" onclick="selectScale(4,4)"><div class="scale-num">4</div><div class="scale-label">만족</div></div>
+        <div class="scale-btn" onclick="selectScale(4,5)"><div class="scale-num">5</div><div class="scale-label">매우<br>만족</div></div>
+      </div>
+    </div>
+
+    <!-- Q5 현업 활용도 -->
+    <div class="card">
+      <div class="q-num">5</div>
+      <div class="q-text">세션 내용이 실제 실무 업무에 유용하고 적용 가능합니다.</div>
+      <div class="scale-wrap" id="scale5">
+        <div class="scale-btn" onclick="selectScale(5,1)"><div class="scale-num">1</div><div class="scale-label">매우<br>그렇지 않다</div></div>
+        <div class="scale-btn" onclick="selectScale(5,2)"><div class="scale-num">2</div><div class="scale-label">그렇지<br>않다</div></div>
+        <div class="scale-btn" onclick="selectScale(5,3)"><div class="scale-num">3</div><div class="scale-label">보통</div></div>
+        <div class="scale-btn" onclick="selectScale(5,4)"><div class="scale-num">4</div><div class="scale-label">그렇다</div></div>
+        <div class="scale-btn" onclick="selectScale(5,5)"><div class="scale-num">5</div><div class="scale-label">매우<br>그렇다</div></div>
+      </div>
+    </div>
+
+    <!-- Q6 추천 의향 -->
+    <div class="card">
+      <div class="q-num">6</div>
+      <div class="q-text">본 세션을 동료나 다른 팀에게 추천할 의향이 있습니다.</div>
+      <div class="scale-wrap" id="scale6">
+        <div class="scale-btn" onclick="selectScale(6,1)"><div class="scale-num">1</div><div class="scale-label">전혀<br>없다</div></div>
+        <div class="scale-btn" onclick="selectScale(6,2)"><div class="scale-num">2</div><div class="scale-label">없다</div></div>
+        <div class="scale-btn" onclick="selectScale(6,3)"><div class="scale-num">3</div><div class="scale-label">보통</div></div>
+        <div class="scale-btn" onclick="selectScale(6,4)"><div class="scale-num">4</div><div class="scale-label">있다</div></div>
+        <div class="scale-btn" onclick="selectScale(6,5)"><div class="scale-num">5</div><div class="scale-label">매우<br>있다</div></div>
+      </div>
+    </div>
+
+    <!-- Q7 자유 의견 -->
+    <div class="card">
+      <div class="q-num">7</div>
+      <div class="q-text">추가로 담당자에게 전달하고 싶은 말씀이 있으시면 자유롭게 남겨주세요.</div>
+      <div style="height:10px;"></div>
+      <textarea id="q7" placeholder="자유롭게 의견을 남겨주세요."></textarea>
+    </div>
+
+    <button class="btn-submit" onclick="submitSurvey()">제출하기 →</button>
+  </div>
+
+  <div class="complete" id="completeMsg">
+    <div class="complete-icon">✅</div>
+    <div class="complete-title">제출이 완료되었습니다!</div>
+    <div class="complete-sub">소중한 의견 감사합니다.<br>더 나은 닥터세션을 위해 최선을 다하겠습니다.</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://cihdysrpwurdxnaspmce.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaGR5c3Jwd3VyZHhuYXNwbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NDAwMTksImV4cCI6MjA5NjExNjAxOX0.D7_I0ZOZrDMxyC8C6YDhvb7nMr8je38DWim9iZNaGXc';
+
+const scales = { 4: 0, 5: 0, 6: 0 };
+
+function toggleQ2Custom() {
+  const sel = document.getElementById('q2').value;
+  const wrap = document.getElementById('q2CustomWrap');
+  wrap.style.display = sel === '기타' ? 'block' : 'none';
+  if (sel !== '기타') document.getElementById('q2Custom').value = '';
+}
+
+function getCompany() {
+  const sel = document.getElementById('q2').value;
+  if (sel === '기타') return document.getElementById('q2Custom').value.trim();
+  return sel;
+}
+
+function selectScale(q, val) {
+  scales[q] = val;
+  const btns = document.querySelectorAll('#scale' + q + ' .scale-btn');
+  btns.forEach((btn, i) => btn.classList.toggle('selected', i < val));
+}
+
+async function submitSurvey() {
+  const name = document.getElementById('q1').value.trim();
+  const company = getCompany();
+  const date = document.getElementById('q3').value;
+
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  if (!company) { alert('고객사를 선택해주세요.'); return; }
+  if (!date) { alert('날짜를 선택해주세요.'); return; }
+  if (!scales[4]) { alert('전반적 만족도를 선택해주세요.'); return; }
+  if (!scales[5]) { alert('현업 활용도를 선택해주세요.'); return; }
+  if (!scales[6]) { alert('추천 의향을 선택해주세요.'); return; }
+
+  const data = {
+    name,
+    company,
+    session_date: date,
+    q_satisfaction: scales[4],
+    q_usability: scales[5],
+    q_nps: scales[6],
+    q_comment: document.getElementById('q7').value.trim(),
+    session_id: null
+  };
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/survey_responses', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById('surveyForm').style.display = 'none';
+    document.getElementById('completeMsg').style.display = 'block';
+  } catch(e) {
+    alert('제출 실패: ' + e.message);
+  }
+}
+
+// 오늘 날짜 기본값
+document.getElementById('q3').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
