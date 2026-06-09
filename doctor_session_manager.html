@@ -418,8 +418,8 @@ function renderCharts(filtered) {
   });
   // 고객사별 마지막 세션 날짜
   const lastDates = {};
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   target.forEach(s => {
     if (!s.client || !s.session_date) return;
     if (!lastDates[s.client] || s.session_date > lastDates[s.client]) lastDates[s.client] = s.session_date;
@@ -458,8 +458,9 @@ function renderCharts(filtered) {
         (function() {
           const last = lastDates[client];
           if (!last) return '<td style="padding:10px 12px;border-bottom:1px solid var(--border-light);text-align:center;">-</td><td style="padding:10px 12px;border-bottom:1px solid var(--border-light);text-align:center;">-</td>';
-          const lastDate = new Date(last + 'T00:00:00+09:00');
-          const diff = Math.floor((today - lastDate) / (1000*60*60*24));
+          const lp = last.split('-').map(Number);
+          const lastDate = new Date(lp[0], lp[1]-1, lp[2]);
+          const diff = Math.round((today - lastDate) / (1000*60*60*24));
           const diffStr = diff < 0 ? Math.abs(diff) + '일 후' : diff === 0 ? '오늘' : diff + '일 전';
           return '<td style="padding:10px 12px;border-bottom:1px solid var(--border-light);text-align:center;font-weight:600;">' + last + '</td>' +
                  '<td style="padding:10px 12px;border-bottom:1px solid var(--border-light);text-align:center;font-weight:600;cursor:default;" title="마지막 세션으로부터 경과일">' + diffStr + '</td>';
